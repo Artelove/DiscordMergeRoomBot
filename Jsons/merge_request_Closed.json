@@ -1,0 +1,137 @@
+{
+    "object_kind": "merge_request",
+    "event_type": "merge_request",
+    "user": {
+      "id": 2668497,
+      "name": "Michail Artelov",
+      "username": "Tekra",
+      "avatar_url": "https://secure.gravatar.com/avatar/601a21f10eb49ec51a0dceb1b2394a33?s=80&d=identicon",
+      "email": "[REDACTED]"
+    },
+    "project": {
+      "id": 53358223,
+      "name": "TestDiscordNotifyProject",
+      "description": null,
+      "web_url": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+      "avatar_url": null,
+      "git_ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+      "git_http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git",
+      "namespace": "Michail Artelov",
+      "visibility_level": 0,
+      "path_with_namespace": "Tekra/testdiscordnotifyproject",
+      "default_branch": "main",
+      "ci_config_path": "",
+      "homepage": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+      "url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+      "ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+      "http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git"
+    },
+    "object_attributes": {
+      "assignee_id": null,
+      "author_id": 2668497,
+      "created_at": "2023-12-30 17:58:01 UTC",
+      "description": "This reverts merge request !7",
+      "draft": false,
+      "head_pipeline_id": null,
+      "id": 272709383,
+      "iid": 11,
+      "last_edited_at": null,
+      "last_edited_by_id": null,
+      "merge_commit_sha": null,
+      "merge_error": null,
+      "merge_params": {
+        "force_remove_source_branch": "1"
+      },
+      "merge_status": "can_be_merged",
+      "merge_user_id": null,
+      "merge_when_pipeline_succeeds": false,
+      "milestone_id": null,
+      "source_branch": "revert-2d8d9e28",
+      "source_project_id": 53358223,
+      "state_id": 2,
+      "target_branch": "main",
+      "target_project_id": 53358223,
+      "time_estimate": 0,
+      "title": "Revert \"Merge branch 'test' into 'main'\"",
+      "updated_at": "2023-12-30 17:58:06 UTC",
+      "updated_by_id": null,
+      "url": "https://gitlab.com/Tekra/testdiscordnotifyproject/-/merge_requests/11",
+      "source": {
+        "id": 53358223,
+        "name": "TestDiscordNotifyProject",
+        "description": null,
+        "web_url": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+        "avatar_url": null,
+        "git_ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "git_http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git",
+        "namespace": "Michail Artelov",
+        "visibility_level": 0,
+        "path_with_namespace": "Tekra/testdiscordnotifyproject",
+        "default_branch": "main",
+        "ci_config_path": "",
+        "homepage": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+        "url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git"
+      },
+      "target": {
+        "id": 53358223,
+        "name": "TestDiscordNotifyProject",
+        "description": null,
+        "web_url": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+        "avatar_url": null,
+        "git_ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "git_http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git",
+        "namespace": "Michail Artelov",
+        "visibility_level": 0,
+        "path_with_namespace": "Tekra/testdiscordnotifyproject",
+        "default_branch": "main",
+        "ci_config_path": "",
+        "homepage": "https://gitlab.com/Tekra/testdiscordnotifyproject",
+        "url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "ssh_url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+        "http_url": "https://gitlab.com/Tekra/testdiscordnotifyproject.git"
+      },
+      "last_commit": {
+        "id": "933082283625fb643fb82e8ba0b90b0209bc9957",
+        "message": "Revert \"Merge branch 'test' into 'main'\"\n\nThis reverts merge request !7",
+        "title": "Revert \"Merge branch 'test' into 'main'\"",
+        "timestamp": "2023-12-30T17:57:57+00:00",
+        "url": "https://gitlab.com/Tekra/testdiscordnotifyproject/-/commit/933082283625fb643fb82e8ba0b90b0209bc9957",
+        "author": {
+          "name": "Michail Artelov",
+          "email": "[REDACTED]"
+        }
+      },
+      "work_in_progress": false,
+      "total_time_spent": 0,
+      "time_change": 0,
+      "human_total_time_spent": null,
+      "human_time_change": null,
+      "human_time_estimate": null,
+      "assignee_ids": [
+  
+      ],
+      "reviewer_ids": [
+  
+      ],
+      "labels": [
+  
+      ],
+      "state": "closed",
+      "blocking_discussions_resolved": true,
+      "first_contribution": false,
+      "detailed_merge_status": "not_open"
+    },
+    "labels": [
+  
+    ],
+    "changes": {
+    },
+    "repository": {
+      "name": "TestDiscordNotifyProject",
+      "url": "git@gitlab.com:Tekra/testdiscordnotifyproject.git",
+      "description": null,
+      "homepage": "https://gitlab.com/Tekra/testdiscordnotifyproject"
+    }
+  }
