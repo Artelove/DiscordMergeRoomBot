@@ -23,7 +23,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent, // enable if you need message content things
   ],
 });
-
+module.exports = client;
 client.commands = new Collection();
 
 const foldersPath = path.join(__dirname, 'commands');
@@ -80,39 +80,36 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
-var port = 9000;
 var mergeEventHook = require("./parseWebhooks/mergeEventHook");
-app.post('/parse', async function(req, res) {
 
-  let db_guild_id = await getGuildId( req.body["project"]["web_url"]).then({
-    
-  });
-  if(db_guild_id == null){
-    res.send("{404}");
-  }
-  switch(req.body["event_type"]){
-    case "merge_request": mergeEventHook.ParseMerge(req.body, db_guild_id); break;
-    case "note": mergeEventHook.ParseNote(req.body, db_guild_id); break;
-  }
-
-});
 async function getGuildId(url){
-  await connectionPool.connect((err, db) => {
-    if (err){
-      console.log(err.message);
-      throw err;
-    }
-    let query = `SELECT * FROM projects WHERE gitlab_link = '${url}' LIMIT(1)` // get inputs from req
-    db.query(query, (err, result) => {
-        if (err){
-          console.log(err.message);
-          throw err;
-        }
-        return result.rows[0].guild_id;
-    })
-  });
+  let guildId = null;
+  let db = await connectionPool.connect();
+  
+  let query = `SELECT * FROM projects WHERE gitlab_link = '${url}' LIMIT(1)` // get inputs from req
+  let result = await db.query(query);
+  guildId = result.rows[0].guild_id;
+  
+  return guildId;
 }
+
+app.post('/', async function(req, res) {
+  
+  let db_guild_id = await getGuildId(req.body["project"]["web_url"]);
+  if(db_guild_id == null){
+    res.status(404).send('Project not found!');
+  }
+  else{
+    switch(req.body["event_type"]){
+      case "merge_request": mergeEventHook.ParseMerge(req.body, db_guild_id); break;
+    }
+    res.status(200).send('WebHook parsed');
+  }
+});
+
+var port = 9000;
 // start the server
 app.listen(port);
 console.log('Server started! At http://localhost:' + port);
 client.login(token);
+

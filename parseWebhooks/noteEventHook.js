@@ -27,8 +27,12 @@ async function openMergeRequestChat(body){
         ],
     });
     let db = await connectionPool.connect();
-    let query = `INSERT INTO merge_requests ("name", "project_id", "channel_id", "author_id", "gitlab_mr_id") VALUES (\`${body["object_attributes"]["title"]}\`, ${body["project"]["id"]}, ${channel.id}, ${body["user"]["id"]}, ${body["object_attributes"]["id"]})`;
-    await db.query(query);
+    await db.query(`INSERT INTO merge_requests VALUES 
+        ${body["object_attributes"]["title"]},
+        ${body["project"]["id"]},
+        ${channel.id},
+        ${body["user"]["id"]},
+        ${body["object_attributes"]["id"]}`);
     channel1 = client.channels.cache.get(channel.id)
     console.log(channel.id);
     newMergeRoom = channel.id;
@@ -36,13 +40,13 @@ async function openMergeRequestChat(body){
 
 async function closeMergeRequestChat(body){
     let db = await connectionPool.connect();
-    let result = await db.query(`SELECT * from merge_requests where gitlab_mr_id = ${body["object_attributes"]["id"]}`);
+    let result = await db.query(`SELECT * from merge_requests where channel_id = ${body["object_attributes"]["id"]}`);
     let guild = await client.guilds.fetch(_guild_id);
     guild.channels.delete(result.rows[0].channel_id);
 }
 
 module.exports = {
-    ParseMerge: function (body, guild_id) {
+    ParseNote: function (body, guild_id) {
         _guild_id = guild_id;
         user = body["user"];
         project = body["project"];
