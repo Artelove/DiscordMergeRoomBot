@@ -9,36 +9,80 @@ let newMergeRoom;
 let _guild_id;
 
 async function openMergeRequestChat(body){
-    let guild = await client.guilds.fetch(_guild_id);
-    let title = body["object_attributes"]["title"];
-    let mergeCreator = await require('../dataCathers/GetUserById')(body["user"]["id"]);
-    channel = await guild.channels.create({
-        name: title,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-            {
-                id: mergeCreator["discord"],
-                allow: [PermissionsBitField.Flags.ViewChannel] 
-            },
-            {
-                id: guild.roles.everyone,
-                deny: [PermissionsBitField.Flags.ViewChannel]
-            },
-        ],
-    });
-    let db = await connectionPool.connect();
-    let query = `INSERT INTO merge_requests ("name", "project_id", "channel_id", "author_id", "gitlab_mr_id") VALUES (\`${body["object_attributes"]["title"]}\`, ${body["project"]["id"]}, ${channel.id}, ${body["user"]["id"]}, ${body["object_attributes"]["id"]})`;
-    await db.query(query);
-    channel1 = client.channels.cache.get(channel.id)
-    console.log(channel.id);
-    newMergeRoom = channel.id;
+    try{
+        //is channel exsist
+        let guild = await client.guilds.fetch(_guild_id);
+
+        let db = await connectionPool.connect();
+        let result = (await db.query(`SELECT * FROM merge_requests where gitlab_mr_id = ${body["object_attributes"]["id"]}`)).rows[0];
+
+        if(result != undefined){
+            if(body["changes"] != undefined){
+                let title = `${body["object_attributes"]["iid"]} ${body["changes"]["title"]["current"]}`;
+                guild.channels.cache.get(result.channel_id).setName(title);
+            }
+        }
+        else
+        {
+            let title = `${body["object_attributes"]["iid"]} ${body["object_attributes"]["title"]}`;
+            let mergeCreator = await require('../dataCathers/GetUserById')(body["user"]["id"]);
+            let query = `SELECT * FROM projects where gitlab_link = '${body["project"]["web_url"]}'`;
+            let proj = (await db.query(query)).rows[0];
+
+            channel = await guild.channels.create({
+                name: title,
+                type: ChannelType.GuildText,
+                permissionOverwrites: [
+                    {
+                        id: mergeCreator["discord"],
+                        allow: [PermissionsBitField.Flags.ViewChannel] 
+                    },
+                    {
+                        id: guild.roles.everyone,
+                        deny: [PermissionsBitField.Flags.ViewChannel]
+                    },
+                ],
+                parent: proj.category_discord_id
+            });
+            
+            let mrTitle = body["object_attributes"]["title"];
+            mrTitle.replace("\"", "\\\"");
+            mrTitle.replace("\'", "\\\'");
+            query = `INSERT INTO merge_requests (name, project_id, channel_id, author_id, gitlab_mr_id) VALUES ('${mrTitle}', ${body["project"]["id"]}, ${channel.id}, ${body["user"]["id"]}, ${body["object_attributes"]["id"]})`;
+            await db.query(query);
+            db.release();
+        }
+    }
+    catch (err){
+        console.log(err);
+    }
 }
 
 async function closeMergeRequestChat(body){
+    try{
     let db = await connectionPool.connect();
     let result = await db.query(`SELECT * from merge_requests where gitlab_mr_id = ${body["object_attributes"]["id"]}`);
     let guild = await client.guilds.fetch(_guild_id);
     guild.channels.delete(result.rows[0].channel_id);
+    await db.query(`DELETE from merge_requests where gitlab_mr_id = ${body["object_attributes"]["id"]}`);
+    db.release();
+    }
+    catch (err){
+        console.log(err);
+    }
+}
+
+async function editMergeRequestChat(body){
+    try{
+    let db = await connectionPool.connect();
+    let result = await db.query(`SELECT * from merge_requests where gitlab_mr_id = ${body["object_attributes"]["id"]}`);
+    db.release();
+    let guild = await client.guilds.fetch(_guild_id);
+    guild.channels.delete(result.rows[0].channel_id);
+    }
+    catch (err){
+        console.log(err.message);
+    }
 }
 
 module.exports = {
@@ -51,6 +95,7 @@ module.exports = {
         let state = objectAttributes["state"];
         switch(state){
             case "opened" : openMergeRequestChat(body); break;
+            case "opened" : //TODO: edit name break;
             case "merged" : closeMergeRequestChat(body); break;
             case "closed" : closeMergeRequestChat(body); break;
         }

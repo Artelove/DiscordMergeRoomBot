@@ -5,5 +5,7 @@ module.exports = async function getUser (id) {
     const response = await fetch(`https://gitlab.com/api/v4/users/${id}?access_token=${beawerToken}`, {
     method: 'GET',
     });
-    return await response.json();
+    let json = await response.json();
+    console.log(json);
+    return json;
 };

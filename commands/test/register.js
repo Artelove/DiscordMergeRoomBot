@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, PermissionsBitField} = require('discord.js');
 const connectionPool = require('../../dbConnection');
 
 module.exports = {
@@ -8,24 +8,31 @@ module.exports = {
 		.addStringOption(option =>
 			option.setName('link')
 				.setDescription('GitLab project link')
+				.setRequired(true))
+		.addStringOption(option => 
+			option.setName("name")
+				.setDescription('Name of category')
 				.setRequired(true)),
 	async execute(interaction) {
 		let link = interaction.options.data[0].value;
+		let category_name = interaction.options.data[1].value + "_mr";
 		if(stringIsAValidUrl(link)){
-			connectionPool.connect((err, db) => {
-                if (err){
-					console.log(err.message);
-					throw err;
-				}
-                let query = `INSERT INTO projects (guild_id, gitlab_link) VALUES (${interaction.guildId}, '${link}');`; // get inputs from req
-                db.query(query, (err, result) => {
-					if (err){
-						console.log(err.message);
-						throw err;
-					}
-                    console.log(result.rowCount);
-                })
-            });
+			let db = await connectionPool.connect();
+				
+			let category = await interaction.guild.channels.create({
+				name: category_name,
+				type: ChannelType.GuildCategory,
+				permissionOverwrites: [
+					{
+						id: interaction.guild.roles.everyone,
+						deny: [PermissionsBitField.Flags.ViewChannel]
+					},
+				],
+			});
+
+			let query = `INSERT INTO projects (guild_id, gitlab_link, category_name, category_discord_id) VALUES (${interaction.guildId}, '${link}', '${category_name}', ${category.id});`; // get inputs from req
+			await db.query(query);
+			db.release();
 			await interaction.reply(`Link: ${link} registered.`);
 		}
 		else{

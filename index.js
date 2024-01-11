@@ -80,7 +80,8 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
-var mergeEventHook = require("./parseWebhooks/mergeEventHook");
+var mergeEventHook = require("../DiscordMergeRoomBot/parseWebhooks/mergeEventHook.js");
+var noteEventHook = require("../DiscordMergeRoomBot/parseWebhooks/noteEventHook.js");
 
 async function getGuildId(url){
   let guildId = null;
@@ -89,6 +90,7 @@ async function getGuildId(url){
   let query = `SELECT * FROM projects WHERE gitlab_link = '${url}' LIMIT(1)` // get inputs from req
   let result = await db.query(query);
   guildId = result.rows[0].guild_id;
+  db.release();
   
   return guildId;
 }
@@ -102,6 +104,7 @@ app.post('/', async function(req, res) {
   else{
     switch(req.body["event_type"]){
       case "merge_request": mergeEventHook.ParseMerge(req.body, db_guild_id); break;
+      case "note": noteEventHook.ParseNote(req.body, db_guild_id); break;
     }
     res.status(200).send('WebHook parsed');
   }
