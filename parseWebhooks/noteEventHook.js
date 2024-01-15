@@ -10,16 +10,21 @@ async function sendNote(body){
         let note = {
             data: body,
             creator: await require('../dataCathers/GetUserById')(body["user"]["id"]),
-            codeArea: await require('../dataCathers/GetRawFileFromBranchByName.js')(
-                body["project_id"], 
-                body["object_attributes"]["original_position"]["new_path"], 
-                body["merge_request"]["source_branch"]),
+            additiondalDescription : "",
             description: body["object_attributes"]["note"],
             url:body["object_attributes"]["url"],
             project_name:body["project"]["name"],
             project_url:body["project"]["web_url"],
         }
-        note.codeArea = getLinesSecrionFromCode(note.codeArea, body["object_attributes"]["original_position"]["line_range"]["start"]["new_line"], body["object_attributes"]["original_position"]["line_range"]["end"]["new_line"]);
+
+        if(body["object_attributes"]["original_position"]!=null){
+            note.codeArea = await require('../dataCathers/GetRawFileFromBranchByName.js')(
+                body["project_id"], 
+                body["object_attributes"]["original_position"]["new_path"], 
+                body["merge_request"]["source_branch"])
+            note.codeArea = getLinesSecrionFromCode(note.codeArea, body["object_attributes"]["original_position"]["line_range"]["start"]["new_line"], body["object_attributes"]["original_position"]["line_range"]["end"]["new_line"]);
+            note.additiondalDescription = `\`\`\`fix\n${note.codeArea}\`\`\`\n`;
+        }
         let embed = getEmbed(note);
         await mongoClient.connect();
         let merge_request = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["merge_request"]["id"]});
@@ -38,7 +43,7 @@ function getEmbed(note){
     return new EmbedBuilder()
     .setColor(note.creator["id"]%16777215)
     .setAuthor({ name: note.creator["name"], iconURL:  note.creator["avatar_url"], url: note.creator["web_url"] })
-    .setDescription(`\`\`\`fix\n${note.codeArea}\`\`\`\n${note.description}  
+    .setDescription(`${note.additiondalDescription}${note.description} 
         [Note link](${note.url})`)
     .addFields(
         { name: 'Project', value: `[${note.project_name}](${note.project_url})`, inline: true},
@@ -59,6 +64,9 @@ function getLinesSecrionFromCode(code, from, to){
     let countLines = 1;
     let lineSection = "";
     for(let i = 0; i < code.length; i++){
+        if(from === 1){
+            lineSection+=countLines+ ": ";
+        }
         if(countLines === to+1){
             lineSection[i-1]='';
             return lineSection;

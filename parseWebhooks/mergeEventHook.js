@@ -2,6 +2,7 @@ const {PermissionsBitField } = require("discord.js");
 const { OverwriteType, ChannelType } = require('discord-api-types/v10');
 const client = require("../index.js");
 const mongoClient = require('../dbConnection.js');
+var ObjectId = require('mongodb').ObjectId;
 
 let _guild_id;
 
@@ -31,7 +32,7 @@ async function openMergeRequestChat(body){
             });
         }
         finally{
-            mongoClient.close();
+            await mongoClient.close();
         }
         let mrTitle = body["object_attributes"]["title"];
         mrTitle.replace("\"", "\\\"");
@@ -39,27 +40,33 @@ async function openMergeRequestChat(body){
 
         try{
             await mongoClient.connect();
-            let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:`${body["object_attributes"]["id"]}`});
+            let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["object_attributes"]["id"]});
+            await mongoClient.close();
             await mongoClient.connect();
             if(result == null)
             {
                 await mongoClient.db("mergeRoomBot").collection("merge_requests").insertOne({
                     name: mrTitle,
                     project_id : body["project"]["id"],
-                    channel_id: Number(channel.id),
+                    channel_id: channel.id,
                     author_id:body["user"]["id"],
                     gitlab_mr_id:body["object_attributes"]["id"]
                 });
             }
             else{
-                await mongoClient.db("mergeRoomBot").collection("merge_requests").updateOne({
-                    channel_id: Number(channel.id),
-                    is_closed:false
-                }, result._id);
+                await mongoClient.db("mergeRoomBot").collection("merge_requests").updateOne(
+                    {"_id": new ObjectId(result._id)},
+                    {
+                        $set: {
+                            "channel_id": channel.id,
+                            "is_closed": false
+                        }
+                    }
+                );
             }
         }
         finally{
-            mongoClient.close();
+            await mongoClient.close();
         }
 }
 
@@ -67,16 +74,25 @@ async function closeMergeRequestChat(body){
     try{
         await mongoClient.connect();
         let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["object_attributes"]["id"]});
+        await mongoClient.close();
         let guild = await client.guilds.fetch(_guild_id);
-        await guild.channels.delete(result.channel_id);
+        let channel = await guild.channels.cache.get(result.channel_id);
+        await channel.delete();
         await mongoClient.connect();
-        await mongoClient.db("mergeRoomBot").collection("merge_requests").updateOne({is_closed:true}, result);
+        await mongoClient.db("mergeRoomBot").collection("merge_requests").updateOne(
+            {"_id": new ObjectId(result._id)},
+            {
+                $set: {
+                    "is_closed": true
+                }
+            }
+        );
     }
     catch(e){
         console.log(e);
     }
     finally{
-        mongoClient.close();
+        await mongoClient.close();
     }
 }
 
@@ -94,7 +110,7 @@ async function editMergeRequestChat(body){
         }
     }
     finally{
-        mongoClient.close();
+        await mongoClient.close();
     }
 }
 
