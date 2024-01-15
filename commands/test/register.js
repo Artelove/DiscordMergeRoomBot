@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ChannelType, PermissionsBitField} = require('discord.js');
-const connectionPool = require('../../dbConnection');
+const mongoClient = require('../../dbConnection');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -17,7 +17,6 @@ module.exports = {
 		let link = interaction.options.data[0].value;
 		let category_name = interaction.options.data[1].value + "_mr";
 		if(stringIsAValidUrl(link)){
-			let db = await connectionPool.connect();
 				
 			let category = await interaction.guild.channels.create({
 				name: category_name,
@@ -29,10 +28,19 @@ module.exports = {
 					},
 				],
 			});
+			try{
+				await mongoClient.connect();
+				await mongoClient.db("mergeRoomBot").collection("projects").insertOne({
+				guild_id:interaction.guildId, 
+				gitlab_link:link, 
+				category_name:category_name, 
+				category_discord_id:category.id
+			})
+			}
+			finally{
+				mongoClient.close();
+			}
 
-			let query = `INSERT INTO projects (guild_id, gitlab_link, category_name, category_discord_id) VALUES (${interaction.guildId}, '${link}', '${category_name}', ${category.id});`; // get inputs from req
-			await db.query(query);
-			db.release();
 			await interaction.reply(`Link: ${link} registered.`);
 		}
 		else{

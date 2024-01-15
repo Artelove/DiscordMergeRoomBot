@@ -1,7 +1,6 @@
 const { Client, GatewayIntentBits, Collection, Events, ChatInputCommandInteraction } = require("discord.js");
 const { REST, Routes } = require('discord.js');
-const { clientId, guildId, token } = require('./config.json');
-const connectionPool = require('./dbConnection.js')
+const { token } = require('./config.json');
 const path = require('node:path');
 const fs = require("fs");
 const client = new Client({
@@ -82,16 +81,23 @@ app.use(bodyParser.json())
 
 var mergeEventHook = require("../DiscordMergeRoomBot/parseWebhooks/mergeEventHook.js");
 var noteEventHook = require("../DiscordMergeRoomBot/parseWebhooks/noteEventHook.js");
+const mongoClient = require("./dbConnection.js");
 
 async function getGuildId(url){
   let guildId = null;
-  let db = await connectionPool.connect();
+  try{
+  await mongoClient.connect();
+  const result = await mongoClient.db("mergeRoomBot").collection("projects").findOne({gitlab_link:`${url}`});
+
+  if(result != undefined)
+      guildId = result.guild_id;
   
-  let query = `SELECT * FROM projects WHERE gitlab_link = '${url}' LIMIT(1)` // get inputs from req
-  let result = await db.query(query);
-  guildId = result.rows[0].guild_id;
-  db.release();
-  
+  }
+
+  finally {
+    mongoClient.close();
+  }
+
   return guildId;
 }
 
