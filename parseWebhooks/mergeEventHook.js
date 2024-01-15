@@ -1,5 +1,6 @@
 const {PermissionsBitField } = require("discord.js");
 const { OverwriteType, ChannelType } = require('discord-api-types/v10');
+const { EmbedBuilder} = require('discord.js');
 const client = require("../index.js");
 const mongoClient = require('../dbConnection.js');
 var ObjectId = require('mongodb').ObjectId;
@@ -9,7 +10,7 @@ let _guild_id;
 async function openMergeRequestChat(body){
         let guild = await client.guilds.fetch(_guild_id);
 
-        let title = `${body["object_attributes"]["iid"]} ${body["object_attributes"]["title"]}`;
+        let title = `${body["object_attributes"]["title"]}`;
         let mergeCreator = await require('../dataCathers/GetUserById')(body["user"]["id"]);
         try{
             await mongoClient.connect();
@@ -102,11 +103,49 @@ async function editMergeRequestChat(body){
 
     try{
         await mongoClient.connect();
-        let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:`${body["object_attributes"]["id"]}`});
+        let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["object_attributes"]["id"]});
 
-        if(result != undefined){
-                 let title = `${body["changes"]["title"]["current"]}`;
-                 guild.channels.cache.get(result.channel_id).setName(title);
+        if(result != null){
+            let title = `${body["changes"]["title"]["current"]}`;
+            guild.channels.cache.get(result.channel_id).setName(title);
+        }
+    }
+    finally{
+        await mongoClient.close();
+    }
+}
+
+
+
+async function push_event_blocking_discussions_resolved(body){
+    let note = {
+        data: body,
+        description: body["object_attributes"]["note"],
+        url:body["object_attributes"]["url"],
+        project_name:body["project"]["name"],
+        project_url:body["project"]["web_url"],
+    }
+    function getEmbed(note){
+        return new EmbedBuilder()
+        .setColor(32768)
+        .setDescription(`## All blocking discussions resolved
+         [Note link](${note.url})`)
+        .addFields(
+            { name: 'Project', value: `[${note.project_name}](${note.project_url})`, inline: true},
+            { name: 'Merge branch flow', value: `${note.data["object_attributes"]["source_branch"]} -> ${note.data["object_attributes"]["target_branch"]}`, inline: true },
+        )
+        
+        .setTimestamp();
+    }
+    let guild = await client.guilds.fetch(_guild_id);
+    try{
+        await mongoClient.connect();
+        let result = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["object_attributes"]["id"]});
+
+        if(result != null){
+            let channel = guild.channels.cache.get(result.channel_id);
+            let embed = getEmbed(note);
+            channel.send({ embeds: [embed] })
         }
     }
     finally{
@@ -117,20 +156,21 @@ async function editMergeRequestChat(body){
 module.exports = {
     ParseMerge: function (body, guild_id) {
         _guild_id = guild_id;
-
-        switch(body["object_attributes"]["state"]){
-            case "opened" : {
+        switch(body["object_attributes"]["action"]){
+            case "update" : {
                 if(body["changes"]["title"]!=undefined)
                 {
                     editMergeRequestChat(body);
-                }
-                else{
-                    openMergeRequestChat(body); 
+                } else{
+                    push_event_blocking_discussions_resolved(body);
                 }
                 break;
+               
             }
-            case "merged" : closeMergeRequestChat(body); break;
-            case "closed" : closeMergeRequestChat(body); break;
+            case "open" : openMergeRequestChat(body); break;
+            case "reopen" : openMergeRequestChat(body); break;
+            case "merge" : closeMergeRequestChat(body); break;
+            case "close" : closeMergeRequestChat(body); break;
         }
     }
 }

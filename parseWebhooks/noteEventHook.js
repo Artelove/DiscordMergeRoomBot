@@ -63,13 +63,19 @@ module.exports = {
 function getLinesSecrionFromCode(code, from, to){
     let countLines = 1;
     let lineSection = "";
+    let stringRows = [];
+    let stringNumbers = [];
+    if(from === 1){
+        stringNumbers.push(1);
+    }
     for(let i = 0; i < code.length; i++){
-        if(from === 1){
-            lineSection+=countLines+ ": ";
-        }
+       
         if(countLines === to+1){
             lineSection[i-1]='';
-            return lineSection;
+            stringNumbers.push(countLines);
+            stringRows.push(lineSection);
+            //return lineSection;
+            break;
         }
 
         if(countLines >= from){
@@ -80,12 +86,40 @@ function getLinesSecrionFromCode(code, from, to){
             countLines++;
             if(countLines === to+1){
                 lineSection[i-1]='';
-                return lineSection;
+                stringRows.push(lineSection);
+                break;
+                //return lineSection;
             }
             if(countLines >= from){
-            lineSection+=countLines+ ": ";
+                stringRows.push(lineSection);
+                stringNumbers.push(countLines);
+                lineSection='';
             }
         }
     }
+    stringRows.splice(0,1);
+    let isNeedClearTabulation = true;
+    
+    stringRows.forEach((str)=>{
+        if(str[0] !== ' ')
+            isNeedClearTabulation = false;   
+    });
+    let newStringRows = [];
+    while(isNeedClearTabulation){
+        newStringRows = [];
+        stringRows.forEach((str)=>{
+            str = str.substring(1);
+            newStringRows.push(str);
+        });
+        stringRows = newStringRows;
+        stringRows.forEach((str)=>{
+            if(str[0] !== ' ')
+                isNeedClearTabulation = false;   
+        });
+    }
+    lineSection = "";
+    newStringRows.forEach((str)=>{
+        lineSection+=str;
+    });
     return lineSection;
 }

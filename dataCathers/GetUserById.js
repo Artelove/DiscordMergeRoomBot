@@ -6,6 +6,5 @@ module.exports = async function getUser (id) {
     method: 'GET',
     });
     let json = await response.json();
-    console.log(json);
     return json;
 };
