@@ -2,7 +2,7 @@
 
 # 2. Go to .env.development and set YOUR_DATA
 
-# 3. Go to `YOUR gilab-project` home page -> settings -> Webhooks -> Add new Webhooks
+# 3. Go to YOUR gilab-project home page -> settings -> Webhooks -> Add new Webhooks
 
 Enter YOUR url to domain.
 
