@@ -22,16 +22,18 @@ async function sendNote(body){
                 body["project_id"], 
                 body["object_attributes"]["original_position"]["new_path"], 
                 body["merge_request"]["source_branch"])
-            note.codeArea = getLinesSecrionFromCode(note.codeArea, body["object_attributes"]["original_position"]["line_range"]["start"]["new_line"], body["object_attributes"]["original_position"]["line_range"]["end"]["new_line"]);
+            note.codeArea = await getLinesSecrionFromCode(note.codeArea, body["object_attributes"]["original_position"]["line_range"]["start"]["new_line"], body["object_attributes"]["original_position"]["line_range"]["end"]["new_line"]);
             note.additiondalDescription = `\`\`\`fix\n${note.codeArea}\`\`\`\n`;
         }
         let embed = getEmbed(note);
         await mongoClient.connect();
         let merge_request = await mongoClient.db("mergeRoomBot").collection("merge_requests").findOne({gitlab_mr_id:body["merge_request"]["id"]});
         let channel = guild.channels.cache.get(merge_request.channel_id);
-        channel.permissionOverwrites.edit(note.creator["discord"], {
-            ViewChannel: true
-        });
+        if(note.creator["discord"] != ''){
+            channel.permissionOverwrites.edit(note.creator["discord"], {
+                ViewChannel: true
+            });
+        }
         channel.send({ embeds: [embed] })
     }
     catch (err){
@@ -60,7 +62,7 @@ module.exports = {
     }
 }
 
-function getLinesSecrionFromCode(code, from, to){
+async function getLinesSecrionFromCode(code, from, to){
     let countLines = 1;
     let lineSection = "";
     let stringRows = [];

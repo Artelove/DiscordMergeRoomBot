@@ -15,15 +15,11 @@ async function openMergeRequestChat(body){
         try{
             await mongoClient.connect();
             let proj = await mongoClient.db("mergeRoomBot").collection("projects").findOne({gitlab_link:body["project"]["web_url"]});
-            
+
             channel = await guild.channels.create({
                 name: title,
                 type: ChannelType.GuildText,
                 permissionOverwrites: [
-                    {
-                        id: mergeCreator["discord"],
-                        allow: [PermissionsBitField.Flags.ViewChannel] 
-                    },
                     {
                         id: guild.roles.everyone,
                         deny: [PermissionsBitField.Flags.ViewChannel]
@@ -31,6 +27,12 @@ async function openMergeRequestChat(body){
                 ],
                 parent: proj.category_discord_id
             });
+
+            if(mergeCreator["discord"] != ''){
+                channel.permissionOverwrites.edit(mergeCreator["discord"], {
+                    ViewChannel: true
+                });
+            }
         }
         finally{
             await mongoClient.close();
