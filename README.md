@@ -5,6 +5,7 @@
 # 3. Go to `YOUR gilab-project` home page -> settings -> Webhooks -> Add new Webhooks
 
 Enter YOUR url to domain.
+
 Choose all check-boxes.
 
 # 4. After launch bot. 
