@@ -1,4 +1,5 @@
 require("dotenv").config({ path: ".env." + process.env.NODE_ENV });
+const { bot_token } = require("./config.json");
 const { Client, GatewayIntentBits, Collection, Events, ChatInputCommandInteraction } = require("discord.js");
 const { REST, Routes } = require("discord.js");
 const path = require("node:path");
@@ -117,4 +118,4 @@ app.post(process.env.parse_point, async function (req, res) {
 // start the server
 app.listen(Number(process.env.port));
 console.log("Server started! At http://localhost:" + Number(process.env.port));
-client.login(process.env.bot_token);
+client.login(bot_token);
