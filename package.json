@@ -1,9 +1,13 @@
 {
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:test": "cross-env NODE_ENV=test node --inspect index.js",
+    "start:dev": "cross-env NODE_ENV=development node index.js"
   },
   "dependencies": {
+    "cross-env": "^7.0.3",
     "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "fs": "^0.0.2",
     "lodash.uniqwith": "^4.5.0",
